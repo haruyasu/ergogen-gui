@@ -30,6 +30,10 @@
   },
   "scripts": {
     "build-ergogen": "./patch/patch_ergogen.sh && cd node_modules/ergogen && npm install && npm run build && cp dist/ergogen.js ../../public/dependencies/ergogen.js",
+    "watch-ergogen": "cd node_modules/ergogen && npx rollup -c -w",
+    "copy-ergogen": "cp node_modules/ergogen/dist/ergogen.js public/dependencies/ergogen.js",
+    "watch-copy": "chokidar \"node_modules/ergogen/dist/ergogen.js\" -c \"yarn copy-ergogen\"",
+    "dev": "concurrently -n ergogen,copy,app -c blue,yellow,green \"yarn watch-ergogen\" \"yarn watch-copy\" \"yarn start\"",
     "generate-previews": "ts-node --project scripts/tsconfig.json scripts/generate-previews.js",
     "postinstall": "yarn run build-ergogen",
     "prestart": "yarn run generate-previews",
@@ -62,6 +66,8 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "chokidar-cli": "^3.0.0",
+    "concurrently": "^9.1.0",
     "@eslint/js": "^9.36.0",
     "@playwright/test": "^1.55.1",
     "@testing-library/jest-dom": "^6.4.2",
