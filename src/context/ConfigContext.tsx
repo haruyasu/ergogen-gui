@@ -162,6 +162,11 @@ type ContextProps = {
   isGenerating: boolean;
   setIsGenerating: Dispatch<SetStateAction<boolean>>;
   isJscadConverting: boolean;
+  activeEditorTab: 'config' | 'footprints';
+  setActiveEditorTab: Dispatch<SetStateAction<'config' | 'footprints'>>;
+  createFootprint: (name?: string) => void;
+  footprintToEdit: { key: number; type: string; name: string; content: string };
+  setFootprintToEdit: Dispatch<SetStateAction<{ key: number; type: string; name: string; content: string }>>;
 };
 
 /**
@@ -245,6 +250,36 @@ const ConfigContextProvider = ({
   // Config version tracking
   const currentConfigVersion = useRef<number>(0);
   const [isJscadConverting, setIsJscadConverting] = useState<boolean>(false);
+
+  // Editor tab state
+  const [activeEditorTab, setActiveEditorTab] = useState<'config' | 'footprints'>('config');
+
+  // Footprint editing state
+  const emptyFootprint = { key: -1, type: '', name: '', content: '' };
+  const [footprintToEdit, setFootprintToEdit] = useState(emptyFootprint);
+
+  /**
+   * Creates a new footprint and opens it in the editor.
+   * @param {string} [name] - Optional name for the new footprint.
+   */
+  const createFootprint = useCallback((name?: string) => {
+    const nextKey = injectionInput?.length || 0;
+    const footprintName = name || `custom_footprint_${nextKey + 1}`;
+    const newFootprint = {
+      key: nextKey,
+      type: 'footprint',
+      name: footprintName,
+      content: `module.exports = {
+  params: {
+    designator: '',
+  },
+  body: p => \`\`
+}`,
+    };
+    setFootprintToEdit(newFootprint);
+    setActiveEditorTab('footprints');
+    setShowSettings(false);
+  }, [injectionInput]);
 
   useEffect(() => {
     console.log('--- ConfigContextProvider mounted ---');
@@ -719,6 +754,11 @@ const ConfigContextProvider = ({
       isGenerating,
       setIsGenerating,
       isJscadConverting,
+      activeEditorTab,
+      setActiveEditorTab,
+      createFootprint,
+      footprintToEdit,
+      setFootprintToEdit,
     }),
     [
       configInput,
@@ -755,6 +795,11 @@ const ConfigContextProvider = ({
       isGenerating,
       setIsGenerating,
       isJscadConverting,
+      activeEditorTab,
+      setActiveEditorTab,
+      createFootprint,
+      footprintToEdit,
+      setFootprintToEdit,
     ]
   );
 

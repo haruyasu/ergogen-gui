@@ -168,6 +168,50 @@ const ArchiveIconButton = styled(OutlineIconButton)`
 `;
 
 /**
+ * Container for editor tab buttons in the header.
+ */
+const HeaderTabs = styled.div`
+  display: flex;
+  margin-left: 1rem;
+  border: 1px solid ${theme.colors.border};
+  border-radius: 6px;
+  overflow: hidden;
+
+  @media (max-width: 500px) {
+    display: none;
+  }
+`;
+
+/**
+ * Individual tab button in the header.
+ */
+const HeaderTab = styled.button<{ $active: boolean }>`
+  background: ${(props) => (props.$active ? theme.colors.accent : 'transparent')};
+  border: none;
+  color: ${theme.colors.white};
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: ${theme.fontSizes.bodySmall};
+  font-family: ${theme.fonts.body};
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: background-color 0.15s ease-in-out;
+
+  &:hover {
+    background: ${(props) => (props.$active ? theme.colors.accentDark : theme.colors.buttonHover)};
+  }
+
+  .material-symbols-outlined {
+    font-size: ${theme.fontSizes.iconSmall};
+  }
+
+  &:not(:last-child) {
+    border-right: 1px solid ${theme.colors.border};
+  }
+`;
+
+/**
  * A responsive button that is only visible on smaller screens.
  * Note: This component is defined but not currently used in the Header.
  */
@@ -253,6 +297,26 @@ const Header = (): JSX.Element => {
             v4.2.1
           </VersionText>
         </ErgogenLogo>
+        {location.pathname === '/' && !configContext?.showSettings && (
+          <HeaderTabs>
+            <HeaderTab
+              $active={configContext?.activeEditorTab === 'config'}
+              onClick={() => configContext?.setActiveEditorTab('config')}
+              aria-label="Config editor tab"
+            >
+              <span className="material-symbols-outlined">code</span>
+              Config
+            </HeaderTab>
+            <HeaderTab
+              $active={configContext?.activeEditorTab === 'footprints'}
+              onClick={() => configContext?.setActiveEditorTab('footprints')}
+              aria-label="Footprints editor tab"
+            >
+              <span className="material-symbols-outlined">memory</span>
+              Footprints
+            </HeaderTab>
+          </HeaderTabs>
+        )}
       </LeftContainer>
       <RightContainer>
         {location.pathname === '/' && (

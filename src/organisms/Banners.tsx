@@ -1,7 +1,30 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import styled from 'styled-components';
 import { useConfigContext } from '../context/ConfigContext';
 import { theme } from '../theme/theme';
+
+/**
+ * Extracts a missing footprint name from an error message.
+ * Returns null if no footprint-related error is detected.
+ */
+const extractMissingFootprintName = (error: string): string | null => {
+  // Match patterns like "Unknown footprint type: xxx" or "footprint 'xxx' not found"
+  const patterns = [
+    /Unknown footprint type:\s*['"]?([^'"]+)['"]?/i,
+    /footprint\s+['"]([^'"]+)['"]\s+not found/i,
+    /Unknown type\s+['"]?([^'"]+)['"]?\s+in\s+footprints/i,
+    /Point reference ['"]([^'"]+)['"]\s+of type\s+footprint\s+not found/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = error.match(pattern);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+  }
+
+  return null;
+};
 
 const bannerColors = {
   info: {
@@ -80,6 +103,29 @@ const CloseButton = styled.button`
   padding-left: 1rem;
 `;
 
+const BannerActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+`;
+
+const CreateFootprintButton = styled.button`
+  background-color: ${theme.colors.accent};
+  border: none;
+  border-radius: 4px;
+  color: white;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: ${theme.fontSizes.bodySmall};
+  font-family: ${theme.fonts.body};
+  white-space: nowrap;
+
+  &:hover {
+    background-color: ${theme.colors.accentDark};
+  }
+`;
+
 const Banners = () => {
   const configContext = useConfigContext();
 
@@ -87,7 +133,23 @@ const Banners = () => {
     return null;
   }
 
-  const { error, deprecationWarning, clearError, clearWarning } = configContext;
+  const { error, deprecationWarning, clearError, clearWarning, createFootprint } = configContext;
+
+  // Check if the error is about a missing footprint
+  const missingFootprintName = useMemo(() => {
+    if (!error) return null;
+    return extractMissingFootprintName(error);
+  }, [error]);
+
+  /**
+   * Handles creating a footprint from the error banner.
+   */
+  const handleCreateFootprint = () => {
+    if (missingFootprintName) {
+      createFootprint(missingFootprintName);
+      clearError();
+    }
+  };
 
   return (
     <BannersContainer data-testid="banners-container">
@@ -112,13 +174,24 @@ const Banners = () => {
             <BannerIcon>error</BannerIcon>
             <BannerText>{error}</BannerText>
           </BannerContent>
-          <CloseButton
-            onClick={clearError}
-            aria-label="Close error message"
-            data-testid="close-error-banner"
-          >
-            &times;
-          </CloseButton>
+          <BannerActions>
+            {missingFootprintName && (
+              <CreateFootprintButton
+                onClick={handleCreateFootprint}
+                aria-label={`Create footprint ${missingFootprintName}`}
+                data-testid="create-footprint-button"
+              >
+                Create "{missingFootprintName}"
+              </CreateFootprintButton>
+            )}
+            <CloseButton
+              onClick={clearError}
+              aria-label="Close error message"
+              data-testid="close-error-banner"
+            >
+              &times;
+            </CloseButton>
+          </BannerActions>
         </Banner>
       )}
     </BannersContainer>
